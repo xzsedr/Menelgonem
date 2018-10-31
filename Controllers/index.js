@@ -1,15 +1,27 @@
-const http = require('http');
-const fs = require('fs');
+const express = require('express');
+const app = new express();
+const port = 3000;
 
-
-fs.readFile('../Views/index.html', function (err, html) {
-    if (err) {
-        throw err; 
-    }       
-    http.createServer(function(request, response) {  
-        response.writeHeader(200, {"Content-Type": "text/html"});  
-        response.write(html);  
-        response.end();  
-    }).listen(8000);
-    console.log("Serwer jesr judasdas");
+app.get('/', function(request, response){
+    response.sendfile('../index.html');
 });
+
+app.listen(port, () => console.log(`Example app listening on port ${port}!`));
+
+// const http = require('http');
+// const fs = require('fs');
+
+
+// http.createServer(function(request, response) {  
+
+    
+//     fs.readFile('../Views/index.html', function (err, html) {
+//     response.writeHeader(200, {"Content-Type": "text/html"});  
+//     response.write(html);              
+//     response.end(); 
+// });
+     
+// }).listen(8000); 
+
+
+
