@@ -1,5 +1,10 @@
 body{
+<<<<<<< HEAD
+ font-size: 80px;   
+ color: blue;
+=======
     color: blue;
     background-color: red;
     font-size: 100;
+>>>>>>> 4a2b687734f3ceca2d71035f84c7ba71d7a69fe0
 }
