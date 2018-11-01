@@ -12,4 +12,4 @@ var x = setInterval(function() {
   document.getElementById("zegar").innerHTML = hours + ": "
   + minutes + ": " + seconds;
 
-}, 1000);
+});
