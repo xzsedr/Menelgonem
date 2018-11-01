@@ -33,9 +33,9 @@ app.get('/test', function(request, response){
 
 
 app.post('/test',
+urlencodedParser,
 [check('password').isLength({min: 10}),
-check('login').isLength({min: 5})],
-urlencodedParser,function(request, response){
+check('login').isLength({min: 5})],function(request, response){
     const errors = validationResult(request);
     if (!errors.isEmpty()) {
     return response.status(422).json({ errors: errors.array() });
