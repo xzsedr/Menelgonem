@@ -31,17 +31,30 @@ app.get('/test', function(request, response){
     response.render("test");
 });
 
-
-app.post('/test',
-[check('password').isLength({min: 10}),
-check('login').isLength({min: 5})],
-urlencodedParser,function(request, response){
-    const errors = validationResult(request);
-    if (!errors.isEmpty()) {
-    return response.status(422).json({ errors: errors.array() });
-  }
-    response.render("test",{dane: request.body});
-    console.log(request.body);  
+app.get('/game', function(request, response){
+    response.render("game");
 });
+
+
+app.post('/game',urlencodedParser,
+check('password').isLength({min:3, max: 5}).withMessage("Zle haslo"),
+check('login').isLength({min: 1, max:5}).withMessage("wypelnij login"),
+check('login').isAlpha().withMessage("Nei mozna cyfr"),
+function(request, response){
+    
+    const errors = validationResult(request);
+    if (!errors.isEmpty()) 
+    {        
+        console.log("blad");
+        response.render("login",{errors: errors.array()});       
+        //return response.status(422).json({ errors: errors.array() })
+    }
+    else
+    {
+    response.render("game",{dane: request.body});
+    console.log(request.body);
+    }  
+});
+
 
 app.listen(port, () => console.log(`Example app listening on port ${port}!`));
