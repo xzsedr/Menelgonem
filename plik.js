@@ -5,10 +5,7 @@ const bodyParser = require('body-parser');
 const {check,validationResult} = require('express-validator/check');
 const urlencodedParser = bodyParser.urlencoded({ extended: false });
 
-//
-var sqlc = require('./sql')
-app.use('/sql', sqlc);
-//
+var conn = require('./connection');
 
 app.set('view engine', 'ejs');
 
@@ -33,10 +30,11 @@ app.get('/test', function(request, response){
     response.render("test");
 });
 
-<<<<<<< HEAD
 app.get('/game', function(request, response){
     response.render("game");
 });
+
+
 
 
 app.post('/game',urlencodedParser,
@@ -57,17 +55,26 @@ function(request, response){
     response.render("game",{dane: request.body});
     console.log(request.body);
     }  
-=======
-app.post('/test', urlencodedParser,
-[check('password').isLength({min: 10}), check('login').isLength({min: 5})],
-function(request, response){
-    const errors = validationResult(request);
-    if (!errors.isEmpty()) {
-        return response.status(422).json({ errors: errors.array() });
-    }
-    response.render("test",{dane: request.body});
-    console.log(request.body);  
->>>>>>> 1f7ec073022d769f6506bbab5a713589bf9f0f46
+});
+
+
+app.get('/sql/createdb', (req, res) => {
+    console.log("jd");
+    var sql = "SELECT * FROM gracze";
+    console.log("jd22");
+    conn.query(sql, (err, result) => {
+        if(err)
+        {
+            //throw err;
+        console.log(result);
+        }
+        else
+        {
+            res.send('Baza stworzona');
+            console.log(result);
+            //conn.destroy();           
+        }
+    });
 });
 
 
