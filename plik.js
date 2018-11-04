@@ -9,6 +9,9 @@ var conn = require('./connection');
 
 app.set('view engine', 'ejs');
 
+var dis = require('./sql');
+app.use('/sql', dis);
+
 app.use(express.static('Styles/'));
 app.use(express.static('Scripts/'));
 
@@ -57,25 +60,14 @@ function(request, response){
     }  
 });
 
-
-app.get('/sql/createdb', (req, res) => {
-    console.log("jd");
-    var sql = "SELECT * FROM gracze";
-    console.log("jd22");
+app.get('/createtable', (req, res) => {
+    var sql = 'CREATE TABLE customers (name VARCHAR(255), address VARCHAR(255))';
     conn.query(sql, (err, result) => {
-        if(err)
-        {
-            //throw err;
+        if(err) throw err;
+        res.send('Tabela stworzona');
         console.log(result);
-        }
-        else
-        {
-            res.send('Baza stworzona');
-            console.log(result);
-            //conn.destroy();           
-        }
-    });
-});
+    })
+})
 
 
 app.listen(port, () => console.log(`Example app listening on port ${port}!`));

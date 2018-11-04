@@ -1,4 +1,7 @@
 const mysql = require('mysql');
+const express = require('express');
+
+var app = express.Router();
 
 const conn = mysql.createConnection({
     host     : '127.0.0.1',
@@ -9,16 +12,9 @@ const conn = mysql.createConnection({
 });
 
 conn.connect(function(err){
-    if(err)
-    {
-        console.log("dblad");
-        console.log(err);
-    }
-    else 
-    {
-        console.log('Połączenie z bazą danych');
-
-    }
+    if(err) throw err;
+    else console.log('Połączenie z bazą danych');
 });
+
 module.exports = conn;
 
