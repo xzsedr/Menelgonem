@@ -17,13 +17,14 @@
             <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
                 <div class="navbar-nav">
                 <a class="nav-item nav-link active" href="#">Home</a>
-                <a class="nav-item nav-link" href="#">Features</a>
+                <a class="nav-item nav-link" href="/game">Gra</a>
                 <a class="nav-item nav-link" href="#">Pricing</a>
                 <a class="nav-item nav-link disabled" href="#">Disabled</a>
                 </div>
                 <div class="navbar-nav ml-auto">
-                    <a class="nav-item nav-link" href="#">Rejestracja</a>
-                    <a class="nav-item nav-link" href="/login">Login</a>
+                    <a class="nav-item nav-link" href="/register">Rejestracja</a>
+                     <% if (typeof login === 'undefined') { %> <a class="nav-item nav-link" href="/login">Login</a> <% } %>
+                    <% if (typeof login !== 'undefined') { %> <a class="nav-item nav-link" href="/login">Logout</a> <% } %>
                 </div>
             </div>
         </nav>

@@ -1,15 +1,15 @@
 const express = require('express');
-const mysql = require('mysql');
 var app = express.Router();
 var conn = require('./connection');
 
 app.get('/select', (err, res) => {
-    var sql = 'SELECT * FROM customers';
+    var sql = 'SELECT * FROM account';
     conn.query(sql, (err, result) => {
         if(err) throw err;
-        res.send('diszwisork');
         console.log(result);
+        //conn.destroy();
     })
-})
+});
+
 
 module.exports = app;

@@ -1,14 +1,13 @@
 const mysql = require('mysql');
 const express = require('express');
 
-var app = express.Router();
 
 const conn = mysql.createConnection({
-    host     : '127.0.0.1',
+    host     : 'localhost',
     user     : 'root',
     password : '',
     port     : 3306,
-    database : 'Account'
+    database : 'menelgonem'
 });
 
 conn.connect(function(err){
