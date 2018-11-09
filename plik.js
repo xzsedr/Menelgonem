@@ -4,22 +4,24 @@ const port = 3000;
 const bodyParser = require('body-parser');
 const {check,validationResult} = require('express-validator/check');
 const urlencodedParser = bodyParser.urlencoded({ extended: false });
-const session = require('express-session');
-
+const session = require('express-session'); // do trzymania danych jak uda nam sie zalogowac
+const flash = require('connect-flash'); //do wyswietlania komunikatow
+const crypto = require('crypto'); // do hashowania
 
 var conn = require('./connection');
 
 app.set('view engine', 'ejs');
 
-var dis = require('./sql');
-app.use('/sql', dis);
+var sqlconnection = require('./sql');
+app.use('/sql', sqlconnection);
 app.use(express.static('Styles/'));
 app.use(express.static('Scripts/'));
 app.use(session({
     secret: 'max',
-    resave: false,
-    saveUninitialized: false
+    resave: true,
+    saveUninitialized: true
   }));
+  app.use(flash());
 
 app.get('/', function(request, response){
     // response.sendFile(__dirname + '/Views/index.html');
@@ -48,10 +50,7 @@ app.get('/game', function(request, response){
 });
 
 app.get('/register', function(request, response){
-    response.render("register",{success: request.session.success});
-    console.log(request.session.success);
-    request.session.errors = null;
-    request.session.success = null;
+    response.render('register', { success: request.flash('success'),errors: request.flash('errors')});
 });
 
 
@@ -64,22 +63,45 @@ check('password2','Hasła nie są jednakowe').custom((value, { req }) => {
     return value == req.body.password;   
   }),
 function(request, response){
-    //console.log(request.body);
+    //console.log("CZy ja tu jestem?");
     const errors = validationResult(request);
     if (!errors.isEmpty()) 
     {        
-        console.log("Bledne dane");
-        response.render("register",{errors: errors.array()});  
-        console.log(errors.array());     
+        console.log(errors.array());   
+        request.flash('errors', errors.array()); 
+        response.redirect('register');   
     }
     else
     {
-        var sql = 'INSERT INTO account SET ?';
         //tu bede szyfrował dane, sprawdzał czy nie ma SQL injection oraz hashował hasła
+        
+        //krok1.generuje sól
+        var generateSalt = function(length){
+            return crypto.randomBytes(Math.ceil(length/2))
+                    .toString('hex') /** convert to hexadecimal format */
+                    .slice(0,length);   /** return required number of characters */
+        };
+        //krok2.hasuje hasło algorytmem sha512
+        var sha512 = function(password, salt){
+            var hash = crypto.createHmac('sha512', salt); /** Hashing algorithm sha512 */
+            hash.update(password);
+            var value = hash.digest('hex');
+            return {
+                salt:salt,
+                passwordHash:value
+            };
+        };
+        
+        var salt = generateSalt(16); /** Gives us salt of length 16 */
+        var passwordData = sha512(request.body.password, salt);
+        console.log('Hasło = '+request.body.password);
+        console.log('Haslo zahashowane = '+passwordData.passwordHash);
+        var hashed = passwordData.passwordHash;
+        console.log('Salt = '+passwordData.salt);
+        var uniquesalt = passwordData.salt;
 
-
-
-        var values = {login: request.body.login, email: request.body.email, password: request.body.password};        
+        var sql = 'INSERT INTO account SET ?';
+        var values = {login: request.body.login, email: request.body.email, salt: uniquesalt, password:hashed};        
         conn.query(sql,values ,(err, result) => {
             if(err) console.log(err);
             else
@@ -87,17 +109,10 @@ function(request, response){
             console.log("Dodano!");
             console.log(values);
             var success = "Zarejestrowano pomyślnie!";
-            request.session.success = success;
+            request.flash('success', success);
             response.redirect('register');  
-            //response.render("register",{success: success});
-            //response.end();
-            //response.write(success);
-            //request.flash('success', 'you are registered');
-            //console.log("dasdasdasd" + request.flash().success);
-            //response.render("register",{success: success}); 
-            //conn.destroy();
             }
-        });
+        });  
     }
 });
 
