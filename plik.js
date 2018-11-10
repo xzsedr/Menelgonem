@@ -63,10 +63,20 @@ check('email').isEmail().withMessage("Podano nieprawidłowy email"),
 check('password2','Hasła nie są jednakowe').custom((value, {req}) => {
     return value == req.body.password;   
   }),
-check('login','Login już istnieje JEBAĆ DISA').custom((login) => {
+check('login','Ork Dis ukradł ci login, wybierz inny').custom((login) => {
     var query = new Promise((resolve) =>{
-        sql.existLogin(login, (length) =>{
-            resolve(length == 0);
+        sql.existLogin(login, (exist) =>{
+            resolve(exist);
+        })
+    });
+    return query.then((result) =>{
+        return result;
+    })
+}),
+check('email','Ork Dis ukradł ci email, wybierz inny ').custom((email) => {
+    var query = new Promise((resolve) =>{
+        sql.existEmail(email, (exist) =>{
+            resolve(exist);
         })
     });
     return query.then((result) =>{
@@ -74,7 +84,6 @@ check('login','Login już istnieje JEBAĆ DISA').custom((login) => {
     })
 }),
 function(request, response){
-    console.log("CZy ja tu jestem?");
     const errors = validationResult(request);
     if (!errors.isEmpty()) 
     {        
@@ -113,7 +122,7 @@ function(request, response){
 
         var sql = 'INSERT INTO account SET ?';
         var values = {login: request.body.login, email: request.body.email, salt: uniquesalt, password: hashed};        
-        conn.query(sql,values ,(err, result) => {
+        conn.query(sql,values ,(err, res) => {
             if(err) console.log(err);
             else
             {
