@@ -1,15 +1,22 @@
-const express = require('express');
-var app = express.Router();
 var conn = require('./connection');
 
-app.get('/select', (err, res) => {
-    var sql = 'SELECT * FROM account';
-    conn.query(sql, (err, result) => {
-        if(err) throw err;
-        console.log(result);
-        //conn.destroy();
-    })
-});
+var sql = {
 
+    existLogin: function(login, callback){
+        var sql = "SELECT * FROM account WHERE login = ?";
+        conn.query(sql, [login], (err, res) =>{
+            if(err) throw err;
+            callback(res.length);
+        });
+    },
+    existEmail: function(email){
+        var sql = 'SELECT * FROM account WHERE email = ?';
+        conn.query(sql, email, (err, res) =>{
+            if(err) return false;
+            return true;
+        })
+    }
 
-module.exports = app;
+};
+
+module.exports = sql;
