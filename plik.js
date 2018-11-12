@@ -4,13 +4,15 @@ const port = 3000;
 const bodyParser = require('body-parser');
 const {check,validationResult} = require('express-validator/check');
 const urlencodedParser = bodyParser.urlencoded({ extended: false });
-const session = require('express-session'); // do trzymania danych jak uda nam sie zalogowac
+const cookieParser = require('cookie-parser');
+var session = require('express-session'); // do trzymania danych jak uda nam sie zalogowac
 const flash = require('connect-flash'); //do wyswietlania komunikatow
 const crypto = require('crypto'); // do hashowania
 
 
 var conn = require('./connection');
 var sql = require('./sql');
+
 
 app.set('view engine', 'ejs');
 
@@ -19,6 +21,7 @@ app.set('view engine', 'ejs');
 
 app.use(express.static('Styles/'));
 app.use(express.static('Scripts/'));
+app.use(cookieParser());
 app.use(session({
     secret: 'max',
     resave: true,
@@ -28,20 +31,29 @@ app.use(session({
 
 app.get('/', function(request, response){
     // response.sendFile(__dirname + '/Views/index.html');
-    response.render("index");
+    // console.log("Tak wyglada sesja" + request.session);
+    // console.log("Są dane: " + request.session.login);
+    if(request.session.login)response.render("index",{session : request.session});
+    else response.render("index");
 });
+
 
 app.get('/druga', function(request, response){
     // response.sendFile(__dirname + '/Views/druga.html');
-    response.render("druga");
+    if(request.session.login)response.render("druga",{session : request.session});
+    else response.render("druga");
 });
 
 app.get('/login', function(request, response){
-    response.render("login");
+    // console.log("Tak wyglada sesja" + request.session);
+    // console.log("Są dane 1231231: " + request.session.login);
+    if(request.session.login)response.render('login', {error: request.flash('error'),session : request.session});
+    else response.render("login", {error: request.flash('error')});
 });
 
-app.get('/logout', function(request, response){
-    response.render("logout");
+app.get('/logout', function(request, response){   
+    request.session.destroy();
+    response.redirect("login");
 });
 
 app.get('/test', function(request, response){
@@ -49,16 +61,18 @@ app.get('/test', function(request, response){
 });
 
 app.get('/game', function(request, response){
-    response.render("game");
+    if(request.session.login)response.render("game",{session : request.session});
+    else response.render("game");
 });
 
 app.get('/register', function(request, response){
-    response.render('register', { success: request.flash('success'),errors: request.flash('errors')});
+    if(request.session.login)response.render('register', { success: request.flash('success'),errors: request.flash('errors'),session : request.session});
+    else response.render("register",{ success: request.flash('success'),errors: request.flash('errors')});
 });
 
 app.post('/register',urlencodedParser,
-check('password').isLength({min:3, max: 5}).withMessage("Wypelnij pole hasło"),
-check('login').isLength({min: 1, max:5}).withMessage("Login musi zawierać min 3 znaki"),
+check('password').isLength({min:1, max: 10}).withMessage("Wypelnij pole hasło"),
+check('login').isLength({min: 1, max:10}).withMessage("Login musi zawierać min 3 znaki"),
 check('email').isEmail().withMessage("Podano nieprawidłowy email"),
 check('password2','Hasła nie są jednakowe').custom((value, {req}) => {
     return value == req.body.password;   
@@ -136,7 +150,7 @@ function(request, response){
     }
 });
 
-app.post('/log',urlencodedParser,function (request,response){
+app.post('/login',urlencodedParser,function (request,response){
     console.log("Wpisane: " + request.body.login);
     var query = new Promise((resolve) =>{
         sql.getData(request.body.login, (res) =>{
@@ -144,26 +158,46 @@ app.post('/log',urlencodedParser,function (request,response){
         })
     });
     query.then((result) =>{
-        if(result.length != 0){
+        if(result.length != 0)
+        {
             console.log("Znaleziono użytkownika.");
             console.log("Jego dane to: " + result[0].login);
-            request.session.login = request.body.login;
-            console.log(request.session.login);
-            response.render('header', {login: request.session.login});
-            response.render("game");
+            //tutaj sprawdzę czy wprowadzone haslo jest prawidlowe
+            var sha512 = function(password, salt){
+                var hash = crypto.createHmac('sha512', salt); /** Hashing algorithm sha512 */
+                hash.update(password);
+                var value = hash.digest('hex');
+                return {
+                    salt:salt,
+                    passwordHash:value
+                };
+            };
+            var salt = result[0].salt;
+            var passwordData = sha512(request.body.password, salt);
+            var hashed = passwordData.passwordHash;
+            if(hashed==result[0].password)
+            {              
+                request.session.login = result[0].login;
+                response.redirect("game");
+                //console.log(request.session); 
+            }
+            else
+            {
+                //console.log("Nie ma takiego użytkownika!");
+                var error = "Zły login lub hasło";
+                request.flash('error', error);
+                response.redirect('login'); 
+            }
+
         }
-        else{
-            console.log("Nie ma takiego użytkownika");
-            var msg = "Zle dane";
-            response.render("login",{errors: msg});
+        else
+        {
+            //console.log("Nie ma takiego użytkownika!");
+            var error = "Zły login lub hasło";
+            request.flash('error', error);
+            response.redirect('login'); 
         }
-    }).catch((err) => {
-        console.log(err);
     })
-    //if(request.body.login==request.session.login)console.log("najs!");
-    //else console.log("dis");
-    // console.log("das");
-    // console.log(request.body);
 });
 
 

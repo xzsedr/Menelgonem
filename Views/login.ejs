@@ -3,14 +3,14 @@
         <%include header %>
         <br>
         <div class="container">
-            <% if (typeof errors !== 'undefined') { %> 
-                <div class="alert alert-danger alert-dismissible fade show" role="alert"><%= errors %>
+            <% if (typeof error !== 'undefined' && typeof error !=='null' && error.length>0) { %> 
+                <div class="alert alert-danger alert-dismissible fade show" role="alert"><%= error %>
                 <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                 <span aria-hidden="true">&times;</span>
                 </button>
                 </div>
                  <% } %>
-            <form action="/log" method="POST">
+            <form action="/login" method="POST">
                 <div class="form-group">
                     <label for="exampleInputEmail1">Username</label>
                     <input type="username" class="form-control" name="login"  placeholder="">

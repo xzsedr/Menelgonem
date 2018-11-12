@@ -22,9 +22,12 @@
                 <a class="nav-item nav-link disabled" href="#">Disabled</a>
                 </div>
                 <div class="navbar-nav ml-auto">
-                    <a class="nav-item nav-link" href="/register">Rejestracja</a>
-                     <% if (typeof login === 'undefined') { %> <a class="nav-item nav-link" href="/login">Login</a> <% } %>
-                    <% if (typeof login !== 'undefined') { %> <a class="nav-item nav-link" href="/login">Logout</a> <% } %>
+                    <% if (typeof session === 'undefined') { %> <a class="nav-item nav-link" href="/register">Rejestracja</a>
+                    <a class="nav-item nav-link" href="/login">Login</a> <% } %>
+                    
+                    <% if (typeof session !== 'undefined') { %>   
+                    <span class="navbar-text">Witaj <%= session.login %></span> 
+                    <a class="nav-item nav-link" href="/logout">Logout</a><% } %>
                 </div>
             </div>
         </nav>

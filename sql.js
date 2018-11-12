@@ -17,5 +17,6 @@ var sql = {
             callback(res.length != 0);
         })
     },
-
 };
+
+module.exports = sql;
