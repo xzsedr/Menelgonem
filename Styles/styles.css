@@ -1,3 +1,8 @@
-body{
+html,body{
     font-size: 18;
+    height: 100%;
+}
+
+.footer{
+    position: relative;
 }
