@@ -8,12 +8,15 @@ const session = require('express-session'); // do trzymania danych jak uda nam s
 const flash = require('connect-flash'); //do wyswietlania komunikatow
 const crypto = require('crypto'); // do hashowania
 
+
 var conn = require('./connection');
+var sql = require('./sql');
 
 app.set('view engine', 'ejs');
 
-var sqlconnection = require('./sql');
-app.use('/sql', sqlconnection);
+// var sqlconnection = require('./sql');
+// app.use('/sql', sqlconnection);
+
 app.use(express.static('Styles/'));
 app.use(express.static('Scripts/'));
 app.use(session({
@@ -53,17 +56,34 @@ app.get('/register', function(request, response){
     response.render('register', { success: request.flash('success'),errors: request.flash('errors')});
 });
 
-
-
 app.post('/register',urlencodedParser,
 check('password').isLength({min:3, max: 5}).withMessage("Wypelnij pole hasło"),
 check('login').isLength({min: 1, max:5}).withMessage("Login musi zawierać min 3 znaki"),
 check('email').isEmail().withMessage("Podano nieprawidłowy email"),
-check('password2','Hasła nie są jednakowe').custom((value, { req }) => {
+check('password2','Hasła nie są jednakowe').custom((value, {req}) => {
     return value == req.body.password;   
   }),
+check('login','Ork Dis ukradł ci login, wybierz inny.').custom((login) => {
+    var query = new Promise((resolve) =>{
+        sql.getData(login, (res) =>{
+            resolve(res.length != 0);
+        })
+    });
+    return query.then((exist) =>{
+        return !exist;
+    });
+}),
+check('email','Ork Dis ukradł ci email, wybierz inny.').custom((email) => {
+    var query = new Promise((resolve) =>{
+        sql.existEmail(email, (exist) =>{
+            resolve(exist);
+        })
+    });
+    return query.then((exist) =>{
+        return !exist;
+    });
+}),
 function(request, response){
-    //console.log("CZy ja tu jestem?");
     const errors = validationResult(request);
     if (!errors.isEmpty()) 
     {        
@@ -101,8 +121,8 @@ function(request, response){
         var uniquesalt = passwordData.salt;
 
         var sql = 'INSERT INTO account SET ?';
-        var values = {login: request.body.login, email: request.body.email, salt: uniquesalt, password:hashed};        
-        conn.query(sql,values ,(err, result) => {
+        var values = {login: request.body.login, email: request.body.email, salt: uniquesalt, password: hashed};        
+        conn.query(sql,values ,(err, res) => {
             if(err) console.log(err);
             else
             {
@@ -116,36 +136,30 @@ function(request, response){
     }
 });
 
-
-
 app.post('/log',urlencodedParser,function (request,response){
-    console.log("Wpisane:" + request.body.login);
-    //console.log("Z bazy danych: " + request.session.login);
-    var sql = 'SELECT * FROM account WHERE login = ?';
-    var value = request.body.login;
-    conn.query(sql,value,(err, result) => {
-        if(err)console.log("BLAD");
-        else{
-           
-            if(result.length > 0)
-            {
-            console.log("Znaleziono użytkownika");
+    console.log("Wpisane: " + request.body.login);
+    var query = new Promise((resolve) =>{
+        sql.getData(request.body.login, (res) =>{
+            resolve(res);
+        })
+    });
+    query.then((result) =>{
+        if(result.length != 0){
+            console.log("Znaleziono użytkownika.");
             console.log("Jego dane to: " + result[0].login);
             request.session.login = request.body.login;
             console.log(request.session.login);
             response.render('header', {login: request.session.login});
             response.render("game");
-            //response.send("*",{islogged: true});
-            }
-            else
-            {
-                console.log("Nie ma takiego użytkownika");
-                var msg = "Zle dane";
-                response.render("login",{errors: msg});
-            }
         }
-        //console.log(result);
-    });
+        else{
+            console.log("Nie ma takiego użytkownika");
+            var msg = "Zle dane";
+            response.render("login",{errors: msg});
+        }
+    }).catch((err) => {
+        console.log(err);
+    })
     //if(request.body.login==request.session.login)console.log("najs!");
     //else console.log("dis");
     // console.log("das");
