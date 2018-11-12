@@ -63,25 +63,25 @@ check('email').isEmail().withMessage("Podano nieprawidłowy email"),
 check('password2','Hasła nie są jednakowe').custom((value, {req}) => {
     return value == req.body.password;   
   }),
-check('login','Ork Dis ukradł ci login, wybierz inny').custom((login) => {
+check('login','Ork Dis ukradł ci login, wybierz inny.').custom((login) => {
     var query = new Promise((resolve) =>{
         sql.existLogin(login, (exist) =>{
             resolve(exist);
         })
     });
-    return query.then((result) =>{
-        return result;
-    })
+    return query.then((exist) =>{
+        return !exist;
+    });
 }),
-check('email','Ork Dis ukradł ci email, wybierz inny ').custom((email) => {
+check('email','Ork Dis ukradł ci email, wybierz inny.').custom((email) => {
     var query = new Promise((resolve) =>{
         sql.existEmail(email, (exist) =>{
             resolve(exist);
         })
     });
-    return query.then((result) =>{
-        return result;
-    })
+    return query.then((exist) =>{
+        return !exist;
+    });
 }),
 function(request, response){
     const errors = validationResult(request);
@@ -137,33 +137,29 @@ function(request, response){
 });
 
 app.post('/log',urlencodedParser,function (request,response){
-    console.log("Wpisane:" + request.body.login);
-    //console.log("Z bazy danych: " + request.session.login);
-    var sql = 'SELECT * FROM account WHERE login = ?';
-    var value = request.body.login;
-    conn.query(sql,value,(err, result) => {
-        if(err) console.log("BLAD");
-        else{
-           
-            if(result.length > 0)
-            {
-            console.log("Znaleziono użytkownika");
+    console.log("Wpisane: " + request.body.login);
+    var query = new Promise((resolve) =>{
+        sql.existLogin(request.body.login, (exist) =>{
+            resolve(exist);
+        })
+    });
+    query.then((exist) =>{
+        if(exist){
+            console.log("Znaleziono użytkownika.");
             console.log("Jego dane to: " + result[0].login);
             request.session.login = request.body.login;
             console.log(request.session.login);
             response.render('header', {login: request.session.login});
             response.render("game");
-            //response.send("*",{islogged: true});
-            }
-            else
-            {
-                console.log("Nie ma takiego użytkownika");
-                var msg = "Zle dane";
-                response.render("login",{errors: msg});
-            }
         }
-        //console.log(result);
-    });
+        else{
+            console.log("Nie ma takiego użytkownika");
+            var msg = "Zle dane";
+            response.render("login",{errors: msg});
+        }
+    }).catch((err) => {
+        console.log(err);
+    })
     //if(request.body.login==request.session.login)console.log("najs!");
     //else console.log("dis");
     // console.log("das");
