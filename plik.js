@@ -65,8 +65,8 @@ check('password2','Hasła nie są jednakowe').custom((value, {req}) => {
   }),
 check('login','Ork Dis ukradł ci login, wybierz inny.').custom((login) => {
     var query = new Promise((resolve) =>{
-        sql.existLogin(login, (exist) =>{
-            resolve(exist);
+        sql.getData(login, (res) =>{
+            resolve(res.length != 0);
         })
     });
     return query.then((exist) =>{
@@ -139,12 +139,12 @@ function(request, response){
 app.post('/log',urlencodedParser,function (request,response){
     console.log("Wpisane: " + request.body.login);
     var query = new Promise((resolve) =>{
-        sql.existLogin(request.body.login, (exist) =>{
-            resolve(exist);
+        sql.getData(request.body.login, (res) =>{
+            resolve(res);
         })
     });
-    query.then((exist) =>{
-        if(exist){
+    query.then((result) =>{
+        if(result.length != 0){
             console.log("Znaleziono użytkownika.");
             console.log("Jego dane to: " + result[0].login);
             request.session.login = request.body.login;
